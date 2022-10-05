@@ -1,0 +1,79 @@
+**Installation in conda**
+	conda create -n mpi mpi4py numpy scipy petsc petsc4py
+
+**Executable**
+1. install: python -m pip install pyinstaller
+2. python -m PyInstaller test_parallel.py -> create a dist folder
+3. dist/test_parallel: mpirun -np 8 --use-hwthread-cpus test_parallel
+
+**Useful links:**
+- Introduction to parallel programming with MPI and Python: https://www.youtube.com/watch?v=36nCgG40DJo
+- Parallel computing in python using mpi4py: https://research.computing.yale.edu/sites/default/files/files/mpi4py.pdf
+- https://nyu-cds.github.io/python-mpi/
+
+--
+
+**To remember:**
+- MPI is a collection of functions and macros. Is not a new programming language.
+- Most MPI programs are based on Single Program Multiple Data (SPMD) model. This means that the 
+  same executable in a number of processes, but the input data makes each copy compute different things
+- Processes (processors) do not share memory, each has a distict memory space. Hence, to 
+  communicate data between processes, explicit function calls must be made in the program.
+  Atention: For the communication to be successful, both 'Send' and 'Receive' must be executed.
+
+--
+
+**Basic functions:**
+- send( self, obj, int dest, int tag = 0 )
+	obj: actual object to be sending. Int, float, array
+	dest: rank of the process which is the destination for the message
+	tag: a tag number which can be used to distinguish among messages
+
+- recv( self, buf = None, int source = ANY_SOURCE, int tag = ANY_TAG, Status status = None )
+	obg: object containing the data to be received
+	source: rank of the process from which to receive message
+	tag: number, which can be used to distinguish among messages
+	status: information about the data received, e.g. rank of source, tag, error code
+  Fully blocking -> The program stops until the message is actually receive 
+
+-	get_rank( self ): return the rank of this process in a communicator
+- get_size( self ): return the number of processes in a communicator
+
+**Collective communications**
+- Involve all the processes in a communicator: Most common are broadcast and reduce
+
+- bcast( self, obj, int root = 0 )
+	Used when one process has a value and must be propagated among all processers
+	obj: object being broadcasted, must be defined on root process before bcast called
+	root: rank of broadcast root processes
+	must be called on each process
+
+- reduce( self, sendobj, op=SUM, int root = 0 )
+	Data from all processes are combined using a binary operation
+	sendobj: object to send
+	op: reduce operation - MPI.SUM, MPI.MIN
+	root: rank of root process
+	returns the result of the reduce operation
+	must be called in ALL processes in a communicator, but result only available in root process
+
+- gather( self, obj, root = 0 )
+	Collect data in ith-process and allocate in process 0 as the ith component of a vector 
+	process 0: x0
+	process 1: x1 -|
+	process 2: x2 ---|
+	process 3: x3 ------|
+
+- scatter
+	Inverse operation of gather. Distribute a vector in root process, sending the ith component to the ith-process
+
+**Other functions for nonblocking**
+- sendrecv( self, obj, sendtag = 0, int dest=0, int source=0 )
+	It performs both send and receive such that if no buffering is available, no deadlock will occur
+
+- bsend
+	MPI allows the programmer to provide a buffer into which data can be placed until it is delivered
+
+- Isend( obj, dest = 0 ); Irecv( obj, source = 0 )
+	comm.Isend( object, dest = 0 )
+	req = comm.Isend( object, source = 0 )
+	req.Wait()
