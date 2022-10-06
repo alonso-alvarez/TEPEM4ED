@@ -23,7 +23,7 @@ cp $idCase'/Mesh.txt' .
 cp $idCase'/Basparam.txt' .
 
 ## max number of processors -> nproc
-np=5; mpirun -np $np --use-hwthread-cpus python3 PySolverTEPEM.py
+np=7; mpirun -np $np --use-hwthread-cpus python3 PySolverTEPEM.py
 
 
 
