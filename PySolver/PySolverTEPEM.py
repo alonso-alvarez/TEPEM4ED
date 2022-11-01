@@ -85,62 +85,60 @@ if __name__ == "__main__":
 		print('\n**********************************************************************')
 		print('**************** PreProcessing - allocating space ********************')
 
-		local_count, *_ = SymbolicElement_CSR( idofs, elem_type = 0, inc = [*range(27)] );
-		row_global = np.zeros( noTypeElement[0] * local_count, dtype = int )
-		col_global = np.zeros( noTypeElement[0] * local_count, dtype = int )
-
 	idofs = world_comm.bcast( idofs, root = 0 )
 	nDim = world_comm.bcast( nDim, root = 0 )
 	incidence = world_comm.bcast( incidence, root = 0 )
 
 	noLocalEl = world_comm.bcast( noLocalEl, root = 0 )
 	system_size = world_comm.bcast( system_size, root = 0 )
-	local_count = world_comm.bcast( local_count, root = 0 )
 	
-	row_local = np.zeros( noLocalEl * local_count, dtype = int )
-	col_local = np.zeros( noLocalEl * local_count, dtype = int )
+	row_local = np.zeros( noLocalEl * ( 27*idofs)**2, dtype = int )
+	col_local = np.zeros( noLocalEl * ( 27*idofs)**2, dtype = int )
 
 	range_a = my_rank * noLocalEl 
 	range_b = my_rank * noLocalEl + noLocalEl
 
-	tic = timer()
-	local_count = 0
-	for iBC in range( 1 ):
-		for ielem in range( range_a,range_b ):
-			globalInc = incidence[ielem] - 1
-			
-			_, row, col = SymbolicElement_CSR( idofs, elem_type = iBC, inc = globalInc );
-			for irow in range( len(row) ):
-				row_local[ local_count ] = row[irow]; col_local[ local_count ] = col[irow]
-				local_count = local_count + 1
-	del( row,col )
+	tic = timer(); local_count = 0 
+	# Simbolic matrix for fluid elements:
+	for ielem in range( range_a, range_b ):
+		globalInc = incidence[ ielem ] - 1
+		local_count = SymbolicFluidElement( idofs, globalInc, row_local, col_local, local_count )
+	local_count = local_count - 1
 
 	if my_rank == 0:
-		local_count = 0
-		for irank in range(world_size):
+		global_count = local_count * world_size
+
+		row_global = np.zeros( global_count, dtype = int )
+		col_global = np.zeros( global_count, dtype = int )
+		for irank in range( world_size ):
 			if irank > 0:
 				world_comm.Recv( row_local, source = irank, tag = 0 )
 				world_comm.Recv( col_local, source = irank, tag = 1 )
 
-			print( 'Receiving from %d: %d %d %d %d'%( irank,row_local[0],row_local[-1],col_local[0],col_local[-1]) ); 
-			for icount in range( len(row_local) ):
-				row_global[ local_count ] = row_local[ icount ]
-				col_global[ local_count ] = col_local[ icount ]
-				local_count = local_count + 1
+			#print( 'Receiving from %d: %d %d %d %d'%( irank,row_local[0],row_local[local_count],col_local[0],col_local[local_count]) ); 
+			row_global[ irank*local_count: (irank+1)*local_count ] = row_local[:local_count]
+			col_global[ irank*local_count: (irank+1)*local_count ] = col_local[:local_count]
 
-		AE_global = csr_matrix((np.zeros(len(row_global), dtype = float), (row_global,col_global) ))
+		AE_global = csr_matrix((np.zeros(global_count, dtype = float), (row_global,col_global ) ))
 		BE_global = np.zeros( system_size, dtype = float )
 		print('\n*Time assembling symbolic structure: %4.2f sec'%(timer() - tic))
 		print('Symbolic matrix size: %4.2f bytes'%(sys.getsizeof(AE_global) ) )
 		print('Symbolic vector size: %4.2f Mb\n'%(sys.getsizeof(BE_global)/(1024*1024) ) )
 	else:
-		#print( 'Sending from %d to 0: %d %d %d %d'%(my_rank,row_local[0],row_local[-1],col_local[0],col_local[-1]) ); 
+		#print( 'Sending from %d to 0: %d %d %d %d'%(my_rank,row_local[0],row_local[local_count],col_local[0],col_local[local_count]) ); 
 		world_comm.Send( [row_local,MPI.INT], dest = 0, tag = 0 );
 		world_comm.Send( [col_local,MPI.INT], dest = 0, tag = 1 );
 
 	world_comm.Barrier()
 	del( row_local, col_local, row_global, col_global )
 	del( xData, incidence )
+
+
+
+
+
+	if my_rank == 0:
+		del( AE_global, BE_global )
 
 	#for icont in range( 1, noLocalEl+1 ):
 		#if my_rank == 0:

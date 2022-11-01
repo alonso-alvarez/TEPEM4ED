@@ -10,18 +10,7 @@
 # 2. python -m PyInstaller test_parallel.py -> create a dist folder
 # 3. dist/test_parallel: mpirun -np 8 --use-hwthread-cpus test_parallel
 
-idCase=${HOME}'/Projects/TEPEM4ED/NumericalExamples/Coronary_p12'
-#idCase=${HOME}'/Projects/TEPEM4ED/NumericalExamples/StenosedArtery'
-
 export HWLOC_HIDE_ERRORS=2
-
-cd PySolver
-	## Compile
-cd ..
-cp ./PySolver/PySolverTEPEM.py .
-
-cp $idCase'/Mesh.txt' .
-cp $idCase'/Basparam.txt' .
 
 ## max number of processors -> nproc --all
 npmax=$(nproc)
@@ -33,6 +22,3 @@ if [ "$np" -le "$npmax" ]; then
 else
 	mpirun -np $np --oversubscribe --use-hwthread-cpus python3 PySolverTEPEM.py
 fi;
-
-rm PySolverTEPEM.py
-rm Mesh.txt Basparam.txt
