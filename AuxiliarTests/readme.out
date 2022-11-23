@@ -1,3 +1,5 @@
+=========== MPI ====================
+
 **Installation in conda**
 	conda create -n mpi mpi4py numpy scipy petsc petsc4py
 
@@ -77,3 +79,59 @@
 	comm.Isend( object, dest = 0 )
 	req = comm.Isend( object, source = 0 )
 	req.Wait()
+
+
+
+=========== PETSc ====================
+From: PETSc Tutorial - Texas advanced computing center - https://www.youtube.com/watch?v=WVdH520y5ZQ
+			Prof. Victor Eijkhout
+
+Routines:
+	https://www.mcs.anl.gov/petsc/petsc4py-current/docs/apiref/petsc4py.PETSc.Mat-class.html
+	https://www.mcs.anl.gov/petsc/petsc4py-current/docs/apiref/petsc4py.PETSc.Mat-class.html
+
+	Program parameters: Read as commandline argument
+	nlocal = PETSc.Options().getInt("n", default_value )
+
+	Calls: Everything in PETSc is an object, with create and destroy calls
+
+	Create vectors:
+		comm = PETSc.COMM_WORLD
+		x = PETSc.Vec().create( comm = comm )
+		x.setType( PETSc.Vec.Type.MPI )
+
+		setValues( index, value ) -> Using global indexing, so proc0 can modify each entry!!
+		x.setValue( index, value )
+		x.setValues( indexes, values ) -> x.setValues( [1,10],[0.1,0.4] )
+
+	Create matrices:
+		For matrix creation, PETSc do not assume any sparsity pattern.
+		As any processor can set any element, this could imply lots of malloc calls.
+		Strategy: Indicate the matrix sparsity structure by duplicating the construction loop
+			once counting, once making
+			How many non-zeros per row?
+			By default, once indicated the nnz elements there is no possible to create aditional ones!!
+
+		SeqAIJ: Single processor - sparse matrix
+			nz: Number of nonzeros per row (or slightly overestimated)
+			nnz: array of row lengths (or overestimate) - better for unbalanced matrices
+
+		Iterative solvers:
+			Solving a linear system Ax = b with Gaussian elimination can take lots of time/memory
+			Alternative: iterative solvers use successive approximations of the solution:
+				- Convergence not always guaranteed
+				- Possible much faster/less memory
+				- Basic operation: y <- Ax executed once per iteration
+				- Also needed: preconditioner B \approx A^{-1}
+
+			KSP: linear system solver object
+				- ksp.setOperators( pA )
+				- ksp.solve( rhs, sol )
+				- Program call: kspSetType( KSPGMRES )
+				- Command line: kpsSetFromOptions( solver )
+					then options -ksp... are parsed: -ksp_type gmres -ksp_gmres_restart 20 -ksp_view...
+					Preconditioners: -pctype ( none:Id matrix, jacobi: diag(A), ilu - only sequential, asm: adaptive schwarz, bjacobi, sor, ...) -pc_factor_levels 3
+
+		mpirun -np 10 --oversubscribe --use-hwthread-cpus python3 ksp.py -n 200 -unsymmetry 5 -ksp_view -ksp_monitor -ksp_type gmres -ksp_gmres_restart 200 -pc_type asm -sub_pc_factor_levels 5 -log_view
+
+		check: setValuesCSR( I,J,V, addv=None )

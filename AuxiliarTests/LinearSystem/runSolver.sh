@@ -18,7 +18,7 @@ echo '** Max number of processors: '$npmax
 
 np=4
 if [ "$np" -le "$npmax" ]; then
-	mpirun -np $np --use-hwthread-cpus python3 PySolverTEPEM.py
+	mpirun -np $np --use-hwthread-cpus python3 PySolverTEPEM.py -n 10
 else
 	mpirun -np $np --oversubscribe --use-hwthread-cpus python3 PySolverTEPEM.py
 fi;
