@@ -1,0 +1,80 @@
+*Read parallel input
+0
+
+*Write parallel input
+0
+
+*Compute
+1
+
+*Write parallel output
+0
+
+*LogFile
+logout.txt
+
+*Initial Time
+0
+
+*Param Write Swicht
+0
+
+*TimeStep
+1.e+9 0. 1.e+9
+
+
+*OutputControl
+1 1
+
+*NodeOutputControl
+0
+
+*Renumbering
+0
+
+*ElementLibraryControl
+ 4 7    27
+
+*StepContinuationControl
+F 100 1.d0 1
+1.e+2 1.e+2 1.e+2 1.e+4 1.e+2 1.e+2 1.e+2
+1.d-2 1.d-2 1.d-2 1.d-2 1.e0 1.e0 1.e0
+Vx Vy Vz P Wx Wy Wz
+0 0 0
+
+*SubStep
+F T 250 1.d0 0
+800  0  0    -1    27
+807  0  0    -2    10
+801  0  0     0    10
+804  1  0    -4     1
+2    1.04   0.04     0     0     0     0
+2     7.5      0     0     0     0     0
+2     1.0      0     0     0     0     0
+1     0     0     0     0     0     0
+1.e+1 1.e+1 1.e+1 1.e+3 1.e+2 1.e+2 1.e+2
+1.d-1 1.d-1 1.d-1 1.d-1 1.e0 1.e0 1.e0
+Vx Vy Vz P Wx Wy Wz
+0 0 0
+
+*SubStep
+F F 250 1.d0 0
+805  0  0   -10    27
+801  0  0     0    10
+802  0  0     0    10
+804  1  0     0     1
+2     1.04     0.04     0     0     0     0
+2     1.0     48     0     0     0     0
+2     1.0     48     0     0     0     0
+0     0     0     0     0     0     0
+1.e+1 1.e+1 1.e+1 1.e+3 1.e+2 1.e+2 1.e+2
+1.d-1 1.d-1 1.d-1 1.d-1 1.e0 1.e0 1.e0
+Vx Vy Vz P Wx Wy Wz
+0 0 0
+
+#Data
+       2 Pol_order
+    1920 Num_pipes
+   16931 Num_coor
+       7 idoft
+       2 Num_layers
