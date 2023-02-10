@@ -1,0 +1,14 @@
+-ksp_atol 1e-8
+-ksp_rtol 1e-8
+-ksp_max_it 2000
+-ksp_monitor
+-ksp_initial_guess_nonzero
+-ksp_gmres_restart 800
+
+-sstep1_ksp_type gmres
+-sstep1_pc_type asm
+-sstep1_sub_pc_type lu
+-sstep1_ksp_gmres_restart 800
+###-sstep1_ksp_gmres_modifiedgramschmidt
+
+-log_summary
